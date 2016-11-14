@@ -38,5 +38,5 @@ __Hypotheses related to video events__
 __Hypothese related to forum events__
 * the number of threads viewed has a positive effect on the next submission grade
  * --> count the number of thread views (`NumberOfThreadViews`)
- * the number of comments posted has a positive effect on the next submission grade
+* the number of comments posted has a positive effect on the next submission grade
  * --> count the number of comments (`NumberOfComments`)
