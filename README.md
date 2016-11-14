@@ -27,7 +27,7 @@ For example for the video components, we can track if a user has played a video,
  
  The goal here is to make relevant hypotheses and extract associated features that reflect a learning behaviour. Three features were already extracted in the Python code supplied: the duration of a video activity, the average time difference between two videos watched and the number of forum threads viewed.
  
- __Hypotheses related to video events__
+__Hypotheses related to video events__
 * the time spent watching videos has a positive effect on the next submission grade
  * --> count the time spent (`DurationOfVideoActivity`)
 * the more frequently a user watches a video, the more chances he has to increase his grade
@@ -35,8 +35,8 @@ For example for the video components, we can track if a user has played a video,
 * the number of different videos watched has a positive effect on the next submission grade
  * --> count the number of different videos (`NumberVideoWatched`)
  
- __Hypothese related to forum events__
- * the number of threads viewed has a positive effect on the next submission grade
-  * --> count the number of thread views (`NumberOfThreadViews`)
+__Hypothese related to forum events__
+* the number of threads viewed has a positive effect on the next submission grade
+ * --> count the number of thread views (`NumberOfThreadViews`)
  * the number of comments posted has a positive effect on the next submission grade
-  * --> count the number of comments (`NumberOfComments`)
+ * --> count the number of comments (`NumberOfComments`)
