@@ -34,3 +34,9 @@ For example for the video components, we can track if a user has played a video,
  * --> extract the duration between two videos watched and compute the mean (`AverageVideoTimeDiffs`)
 * the number of different videos watched has a positive effect on the next submission grade
  * --> count the number of different videos (`NumberVideoWatched`)
+ 
+ __Hypothese related to forum events__
+ * the number of threads viewed has a positive effect on the next submission grade
+  * --> count the number of thread views (`NumberOfThreadViews`)
+ * the number of comments posted has a positive effect on the next submission grade
+  * --> count the number of comments (`NumberOfComments`)
