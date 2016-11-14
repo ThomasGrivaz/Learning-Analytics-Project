@@ -6,14 +6,16 @@ from CustomFeatures import CalculateFeatures
 #-----------------------------------------------#
 # Function that indents an entire block of text #
 #-----------------------------------------------#
+
+
 def indent(text, prefix, predicate=None):
-    if predicate is None:
-        def predicate(line):
-            return line.strip()
-    def prefixed_lines():
-        for line in text.splitlines(True):
-            yield (prefix + line if predicate(line) else line)
-    return ''.join(prefixed_lines())
+	if predicate is None:
+		def predicate(line):
+			return line.strip()
+	def prefixed_lines():
+		for line in text.splitlines(True):
+			yield (prefix + line if predicate(line) else line)
+	return ''.join(prefixed_lines())
 # END OF FUNCTION
 
 #--------------------------------------#
@@ -28,25 +30,25 @@ def PrintDataSet(DataSet):
 	for ProblemID in DataSet.keys():
 
 		# Print ProblemID with a small pause
-		print colored('\n'+'-'*32+'\n\tProblem Number '+str(ProblemID)+'\n'+'-'*32, 'red')
+		print(colored('\n'+'-'*32+'\n\tProblem Number '+str(ProblemID)+'\n'+'-'*32, 'red'))
 		time.sleep(1)
 
 		# Loop through all students
 		for UserID in DataSet[ProblemID].keys():
 
 			# Print UserID
-			print colored('\n'+'-'*52+'\nStudent ID: '+UserID+'\n'+'-'*52, 'magenta')
+			print(colored('\n'+'-'*52+'\nStudent ID: '+UserID+'\n'+'-'*52, 'magenta'))
 
 			# Loop through all problem (re-)submissions
 			for SubmissionNumber in DataSet[ProblemID][UserID].keys():
 
 				# Print submission number
-				print colored('\n\t'+'-'*20+'\n\tSubmission Number '+str(SubmissionNumber)+'\n\t'+'-'*20, 'blue')
+				print(colored('\n\t'+'-'*20+'\n\tSubmission Number '+str(SubmissionNumber)+'\n\t'+'-'*20, 'blue'))
 
 				# Print time stamp
-				print '\t\t TimeStamp      '+str(DataSet[ProblemID][UserID][SubmissionNumber]['TimeStamp'])
+				print('\t\t TimeStamp      '+str(DataSet[ProblemID][UserID][SubmissionNumber]['TimeStamp']))
 				if SubmissionNumber>0:
-					print '\t\t TimeSinceLast  '+str(DataSet[ProblemID][UserID][SubmissionNumber]['TimeSinceLast'])
+					print('\t\t TimeSinceLast  '+str(DataSet[ProblemID][UserID][SubmissionNumber]['TimeSinceLast']))
 
 				# Print video and forum events since last submission
 				if SubmissionNumber>0:
@@ -56,13 +58,13 @@ def PrintDataSet(DataSet):
 					NForumEvents = DataSet[ProblemID][UserID][SubmissionNumber]['NForumEvents']
 
 					# Print number of video and forum events
-					print '\t\t NVideoEvents   '+str(NVideoEvents)
-					print '\t\t NForumEvents   '+str(NForumEvents)
+					print('\t\t NVideoEvents   '+str(NVideoEvents))
+					print('\t\t NForumEvents   '+str(NForumEvents))
 
 					# Print table with video events if they exist
 					if NVideoEvents>0:
-						print '\n\t\t VideoEvents (since last submission) : '
-						print indent(tabulate(zip(*[
+						print('\n\t\t VideoEvents (since last submission) : ')
+						print(indent(tabulate(zip(*[
 							DataSet[ProblemID][UserID][SubmissionNumber]['VideoEvents']['TimeStamp'],
 							DataSet[ProblemID][UserID][SubmissionNumber]['VideoEvents']['EventType'],
 							DataSet[ProblemID][UserID][SubmissionNumber]['VideoEvents']['VideoID'],
@@ -72,18 +74,18 @@ def PrintDataSet(DataSet):
 							DataSet[ProblemID][UserID][SubmissionNumber]['VideoEvents']['SeekType'],
 							DataSet[ProblemID][UserID][SubmissionNumber]['VideoEvents']['OldSpeed'],
 							DataSet[ProblemID][UserID][SubmissionNumber]['VideoEvents']['NewSpeed']]),
-							headers=['TimeStamp', 'EventType', 'VideoID', 'CurrentTime', 'OldTime', 'NewTime', 'SeekType', 'OldSpeed', 'NewSpeed'], tablefmt="rst"), prefix='\t\t\t\t')
+							headers=['TimeStamp', 'EventType', 'VideoID', 'CurrentTime', 'OldTime', 'NewTime', 'SeekType', 'OldSpeed', 'NewSpeed'], tablefmt="rst"), prefix='\t\t\t\t'))
 
 					# Print table with forum events if they exist
 					if NForumEvents>0:
-						print '\n\t\t ForumEvents (since last submission) : '
-						print indent(tabulate(zip(*[
+						print('\n\t\t ForumEvents (since last submission) : ')
+						print(indent(tabulate(zip(*[
 							DataSet[ProblemID][UserID][SubmissionNumber]['ForumEvents']['TimeStamp'],
 							DataSet[ProblemID][UserID][SubmissionNumber]['ForumEvents']['EventType'],
 							DataSet[ProblemID][UserID][SubmissionNumber]['ForumEvents']['PostType'],
 							DataSet[ProblemID][UserID][SubmissionNumber]['ForumEvents']['PostID'],
 							DataSet[ProblemID][UserID][SubmissionNumber]['ForumEvents']['PostLength']]),
-							headers=['TimeStamp', 'EventType', 'PostType', 'PostID', 'PostLength'], tablefmt="rst"), prefix='\t\t\t\t')
+							headers=['TimeStamp', 'EventType', 'PostType', 'PostID', 'PostLength'], tablefmt="rst"), prefix='\t\t\t\t'))
 
 				# Print extra features
 				if SubmissionNumber>0:
@@ -93,12 +95,12 @@ def PrintDataSet(DataSet):
 						# Count as 1 row
 						EffectiveRowCounter += 1
 						# Print features
-						print colored('\n\t\t Features :', 'cyan')
+						print(colored('\n\t\t Features :', 'cyan'))
 						for FeatureName in FeatureNames:
-							print colored('\t\t\t\t%s : %d' % (FeatureName, DataSet[ProblemID][UserID][SubmissionNumber]['Features'][FeatureName]), 'cyan')
+							print(colored('\t\t\t\t%s : %d' % (FeatureName, DataSet[ProblemID][UserID][SubmissionNumber]['Features'][FeatureName]), 'cyan'))
 					
 				# Print (re-)submission grade and grade difference
-				print '\n\t\t Grade          '+str(DataSet[ProblemID][UserID][SubmissionNumber]['Grade'])
+				print('\n\t\t Grade          '+str(DataSet[ProblemID][UserID][SubmissionNumber]['Grade']))
 				if SubmissionNumber>0:
 					GradeDiff = DataSet[ProblemID][UserID][SubmissionNumber]['GradeDiff']
 					if GradeDiff>0:
@@ -107,10 +109,10 @@ def PrintDataSet(DataSet):
 						GradeDiffColor = 'red'
 					else:
 						GradeDiffColor = 'grey'
-					print colored('\t\t GradeDiff      '+str(GradeDiff), GradeDiffColor)
+					print(colored('\t\t GradeDiff      '+str(GradeDiff), GradeDiffColor))
 
 	# Print end of dataset notice, and number of effective rows 
-	print '\nEnd of data set. Number of rows with custom features is %d.\n' % EffectiveRowCounter
+	print('\nEnd of data set. Number of rows with custom features is %d.\n' % EffectiveRowCounter)
 
 # END OF FUNCTION
 
@@ -155,7 +157,7 @@ def AppendFeatures(DataSet):
 def ExportAsCSV(DataSet):
 
 	# Print title
-	print '\nOutput Table (with custom features):\n'
+	print('\nOutput Table (with custom features):\n')
 
 	# Determine number of custom features and get their names
 	FeatureNamesSet = set()
@@ -224,8 +226,8 @@ def ExportAsCSV(DataSet):
 	ColumnNames += ListOfFeatureNames
 	
 	# Print sample of output table
-	print tabulate(Table[0:160], headers=ColumnNames, tablefmt="fancy_grid")
-	print '(this is a sample of the output table)\n'
+	print(tabulate(Table[0:160], headers=ColumnNames, tablefmt="fancy_grid"))
+	print('(this is a sample of the output table)\n')
 
 	# Save table into CSV file
 	with open("OutputTable2.csv", "w") as f:
@@ -234,7 +236,7 @@ def ExportAsCSV(DataSet):
 		writer.writerows(Table)
 
 	# Print success message
-	print colored('Success! Table with %d rows saved to file: ./OutputTable.csv\n' % len(Table), 'green')
+	print(colored('Success! Table with %d rows saved to file: ./OutputTable.csv\n' % len(Table), 'green'))
 
 # END OF FUNCTION
 
