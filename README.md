@@ -29,5 +29,5 @@ For example for the video components, we can track if a user has played a video,
  
  __Hypotheses related to video events__
 * the time spent watching videos has a positive effect on the next submission grade
- * \rightarrow count the time spent (`DurationOfVideoActivity`)
+ * $\rightarrow$ count the time spent (`DurationOfVideoActivity`)
 * the number of different videos watched has a positive effect on the next submission grade
