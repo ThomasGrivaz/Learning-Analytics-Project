@@ -1,0 +1,18 @@
+14-15 november:
+
+Extract some simple features from the dataset:
+- number of videos watched since last submission
+- number of comments made
+- number of video to forum transitions?
+
+
+N gram pairs
+problem with simple n gram - want to capture higher-level behvaior
+- i.e. user watches video, posts on forum, resubmits.
+
+
+
+--
+Thomas working on feature that requires figuring out what happened on the forum
+not just if somebody made a post
+see which user created the post (PostID)
