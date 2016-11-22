@@ -45,9 +45,11 @@ __Hypothese related to forum events__
 * the number of comments posted has a positive effect on the next submission grade
  * --> count the number of comments posted (`NumberOfComments`)
 * When a learner upvotes a post or a comment, most likely they found the contet helpful and it helped them solve their problems, this might have a positive effect on the next submission grade.
-  * --> count the number of upvotes for both comments and posts (`NumberOfUpvotes`)
+ * --> count the number of upvotes for both comments and posts (`NumberOfUpvotes`)
+  
 __Hypothese combining both events (bigrams and trigrams)__
-* watching a video followed by posting 
+* watching a video followed by posting
+
 __Other hypotheses__
 * the time between two submissions should be indicative of the grade difference. A lot of submissions with relatively small time durations between submissions reflect a "trial and error" pattern where the learner typically tests some lines of code and wants to see the result by submitting. This behaviour is prone to errors in the code and as such should have a negative effect on the grade.
 *TODO (probably secondary features for regression task)
