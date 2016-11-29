@@ -16,3 +16,27 @@ problem with simple n gram - want to capture higher-level behvaior
 Thomas working on feature that requires figuring out what happened on the forum
 not just if somebody made a post
 see which user created the post (PostID)
+
+22nd november
+for each feature
+
+plot distribution of each feature
+Cohen's kappa < 0.6 signals poor interjudge agreement
+comp
+
+kaggle
+part1 20dec
+part2 24jan
+
+--
+
+Nov29 Mina update
+We are using a new train and test dataset.pickle - replaced with updated version in repo
+dataset_test.pickle same as kaggle
+instead of classifier.startingPoint.R:
+    use classifierCompleteFlow, which has the whole pipeline for kaggle classification competition
+
+instead of kappa value, we're using ROC as the evaluation metric
+
+random classifier has AUC of 0.5
+ours would be between 0.5 and 1
