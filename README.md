@@ -34,9 +34,24 @@ __Hypotheses related to video events__
  * --> extract the duration between two videos watched and compute the mean (`AverageVideoTimeDiffs`)
 * the number of different videos watched has a positive effect on the next submission grade
  * --> count the number of different videos (`NumberVideoWatched`)
- 
+* if the learner seeks to specific points in the video lectures, (s)he is actively engaged with the course material
+ * --> count the number of seek events (`NumberOfSeekEvents`)
+
 __Hypothese related to forum events__
 * the number of threads viewed has a positive effect on the next submission grade
  * --> count the number of thread views (`NumberOfThreadViews`)
+* the number of thread created has a positive effect on the next submission grade
+ * --> count the number of thread launched (`NumberOfThreadCreated`)
 * the number of comments posted has a positive effect on the next submission grade
- * --> count the number of comments (`NumberOfComments`)
+ * --> count the number of comments posted (`NumberOfComments`)
+* When a learner upvotes a post or a comment, most likely they found the contet helpful and it helped them solve their problems, this might have a positive effect on the next submission grade.
+ * --> count the number of upvotes for both comments and posts (`NumberOfUpvotes`)
+  
+__Hypothese combining both events (bigrams and trigrams)__
+* watching a video followed by posting
+
+__Other hypotheses__
+* the time between two submissions should be indicative of the grade difference. A lot of submissions with relatively small time durations between submissions reflect a "trial and error" pattern where the learner typically tests some lines of code and wants to see the result by submitting. This behaviour is prone to errors in the code and as such should have a negative effect on the grade.
+*TODO (probably secondary features for regression task)
+ * --> find out if certain sequences of behavior are good predictors of improvement
+ * --> compute more in-depth representations of what happened on the forum (did someone reply to your forum thread? Did you reply to them?)
