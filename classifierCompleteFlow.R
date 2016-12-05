@@ -6,15 +6,18 @@ library(plyr) #ddply
 
   #------ read features extracted from train set, using your python script
   db=read.csv('OutputTable.csv', stringsAsFactors = F)
+
+# actual dataset with custom features
+db = read.csv('OutputTable2.csv', stringsAsFactors = F)
   
   #------ sort submissions
   db=db[order(db$UserID,db$ProblemID,db$SubmissionNumber),]
   
   #--- replace NA values with 0
   db[is.na(db)]=0
-  
+
   #----- remove first submissions
-  db= filter(db,SubmissionNumber>0)
+  db= filter(db, SubmissionNumber>0)
   
   #---- remove cases when there is no video or forum activity between two submissions
   db$NVideoAndForum= db$NVideoEvents+db$NForumEvents
