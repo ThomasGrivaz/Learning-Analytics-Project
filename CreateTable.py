@@ -236,7 +236,7 @@ def ExportAsCSV(DataSet):
 		writer.writerows(Table)
 
 	# Print success message
-	print(colored('Success! Table with %d rows saved to file: ./OutputTable.csv\n' % len(Table), 'green'))
+	print(colored('Success! Table with %d rows saved to file: ./OutputTable2.csv\n' % len(Table), 'green'))
 
 # END OF FUNCTION
 
