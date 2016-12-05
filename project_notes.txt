@@ -40,3 +40,26 @@ instead of kappa value, we're using ROC as the evaluation metric
 
 random classifier has AUC of 0.5
 ours would be between 0.5 and 1
+
+—-
+
+December 5
+After visualization of the dataset in R (View(db)), I observed that the features we added are typically very sparse:
+
+-349 non zero values for NumberoOfThreadCreated (out of 4948 observations)
+-83 non zero values for NumberOfUpvotes
+-761 for NumberOfPosts
+-215 for NumberOfComments
+-822 for NumberVideoWatched
+-402 for NumberOfSeekEvents
+
+Hence I doubt that these features will have a predictive impact on the classification task
+
+Possible solutions: 
+-find a smart way to aggregate these features (maybe build some kind of  implication score given all these numbers)
+-explore other features
+
+I started trying a few models
+-Random Forest gives poor performance (ROC of 0.545) no matter which set of features you choose. Oddly enough the best performance is for only one predictor. I will further investigate
+
+-SVM yields poor results as well. I did not try different kernels for now
