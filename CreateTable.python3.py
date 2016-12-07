@@ -404,7 +404,7 @@ def ExportAsCSV(DataSet):
 
 # Get input dataset filepath
 
-FilePath = 'dataset.pickle'
+FilePath = 'data/dataset.pickle'
 
 # Load dataset into python dictionary
 
