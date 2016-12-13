@@ -3,6 +3,9 @@ model = random_forest
 testDb=read.csv('OutputTable_test.csv', stringsAsFactors = F)
 testDb$Grade=NULL; testDb$GradeDiff=NULL;
 testDb[is.na(testDb)]=0
+testDb = ddply(testDb, .(UserID), transform, AvgTimeBwSubs = mean(TimeSinceLast))
+testDb$NVideoAndForum= testDb$NVideoEvents+testDb$NForumEvents
+testDb = ddply(testDb, .(UserID), transform, ActivityRate = sum(NVideoAndForum!=0)/length(UserID))
 
 #---- use trained model to predict progress for test data
 preds= predict(model, newdata=testDb[,fs]);
