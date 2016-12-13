@@ -19,15 +19,16 @@ def CalculateFeatures(VideoEvents=[], ForumEvents=[]):
         DurationOfVideoActivity = TimeStamps[-1] - TimeStamps[0]
         AverageVideoTimeDiffs = sum(TimeStampDiffs)/max(1,len(TimeStampDiffs))
         NumberVideoWatched = len(set(VideoEvents['VideoID']))
-
-        NumberOfSeekEvents = EventTypes.count('Video.Seek')
+        NumberOfVideoInteractions = EventTypes.count('Video.Seek')+EventTypes.count('Video.Pause')
+        NumberOfSlowPlay = sum(newspeed < 1 for newspeed in VideoEvents['NewSpeed'] if newspeed is not None)
 
         # Append features to dictionary
         Features.update({
             'DurationOfVideoActivity': DurationOfVideoActivity,
             'AverageVideoTimeDiffs': AverageVideoTimeDiffs,
             'NumberVideoWatched': NumberVideoWatched,
-            'NumberOfSeekEvents': NumberOfSeekEvents
+            'NumberOfVideoInteractions': NumberOfVideoInteractions,
+            'NumberOfSlowPlay': NumberOfSlowPlay
         })
 
     # Features for forum events
@@ -37,21 +38,24 @@ def CalculateFeatures(VideoEvents=[], ForumEvents=[]):
         # Keys: TimeStamp, EventType, PostType, PostID, PostLength
         EventTypes = ForumEvents['EventType']
         NumberOfThreadViews = EventTypes.count('Forum.Thread.View')
-        NumberOfPosts = EventTypes.count('Forum.Thread.PostOn')
+        NumberOfPosts = EventTypes.count('Forum.Thread.PostOn')+EventTypes.count('Forum.Post.CommentOn')
         NumberOfThreadCreated = EventTypes.count('Forum.Thread.Launch')
-        NumberOfComments = EventTypes.count('Forum.Post.CommentOn')
         NumberOfUpvotes = EventTypes.count('Forum.Post.Upvote')+EventTypes.count('Forum.Comment.Upvote')
+
+        TimeStamps = ForumEvents['TimeStamp']
+        # TimeStampDiffs = [x[0] - x[1] for x in zip(TimeStamps[1:], TimeStamps[:-1])]
+        TimeSpentOnForum = TimeStamps[-1] - TimeStamps[0]
 
         # Append features to dictionary
         Features.update({
             'NumberOfThreadViews': NumberOfThreadViews,
             'NumberOfPosts': NumberOfPosts,
             'NumberOfThreadCreated': NumberOfThreadCreated,
-            'NumberOfComments': NumberOfComments,
-            'NumberOfUpvotes': NumberOfUpvotes
+            'NumberOfUpvotes': NumberOfUpvotes,
+            'TimeSpentOnForum': TimeSpentOnForum
         })
     # video + forum events combined (e.g. n-grams)
     if len(ForumEvents)>0 and len(VideoEvents)>0:
-       pass
+        pass
 
     return Features
