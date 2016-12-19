@@ -1,7 +1,7 @@
 #----------------------------------------#
 # Function that computes custom features #
 #----------------------------------------#
-
+from collections import Counter
 
 def CalculateFeatures(VideoEvents=[], ForumEvents=[]):
 
@@ -15,12 +15,21 @@ def CalculateFeatures(VideoEvents=[], ForumEvents=[]):
         # Keys: TimeStamp, EventType, VideoID, CurrentTime, OldTime, NewTime, SeekType, OldSpeed, NewSpeed
         EventTypes = VideoEvents['EventType']
         TimeStamps = VideoEvents['TimeStamp']
+        print(VideoEvents)
         TimeStampDiffs = [x[0]-x[1] for x in zip(TimeStamps[1:],TimeStamps[:-1])]
         DurationOfVideoActivity = TimeStamps[-1] - TimeStamps[0]
         AverageVideoTimeDiffs = sum(TimeStampDiffs)/max(1,len(TimeStampDiffs))
         NumberVideoWatched = len(set(VideoEvents['VideoID']))
         NumberOfVideoInteractions = EventTypes.count('Video.Seek')+EventTypes.count('Video.Pause')
         NumberOfSlowPlay = sum(newspeed < 1 for newspeed in VideoEvents['NewSpeed'] if newspeed is not None)
+        LastVideoEvent = TimeStamps[-1]
+
+
+        #temp_list = list(EventTypes.values())[0]
+        load_indexes = [i for i, j in enumerate(EventTypes) if j == 'Video.Load']
+        IDs = VideoEvents['VideoID']
+        video_loaded = [IDs[i] for i in load_indexes]
+        RewatchingScore = sum(v for v in Counter(video_loaded).values() if v > 1)
 
         # Append features to dictionary
         Features.update({
@@ -28,7 +37,9 @@ def CalculateFeatures(VideoEvents=[], ForumEvents=[]):
             'AverageVideoTimeDiffs': AverageVideoTimeDiffs,
             'NumberVideoWatched': NumberVideoWatched,
             'NumberOfVideoInteractions': NumberOfVideoInteractions,
-            'NumberOfSlowPlay': NumberOfSlowPlay
+            'NumberOfSlowPlay': NumberOfSlowPlay,
+            'RewatchingScore': RewatchingScore,
+            'LastVideoEvent': LastVideoEvent
         })
 
     # Features for forum events
@@ -45,6 +56,7 @@ def CalculateFeatures(VideoEvents=[], ForumEvents=[]):
         TimeStamps = ForumEvents['TimeStamp']
         # TimeStampDiffs = [x[0] - x[1] for x in zip(TimeStamps[1:], TimeStamps[:-1])]
         TimeSpentOnForum = TimeStamps[-1] - TimeStamps[0]
+        LastForumEvent = TimeStamps[-1]
 
         # Append features to dictionary
         Features.update({
@@ -52,7 +64,8 @@ def CalculateFeatures(VideoEvents=[], ForumEvents=[]):
             'NumberOfPosts': NumberOfPosts,
             'NumberOfThreadCreated': NumberOfThreadCreated,
             'NumberOfUpvotes': NumberOfUpvotes,
-            'TimeSpentOnForum': TimeSpentOnForum
+            'TimeSpentOnForum': TimeSpentOnForum,
+            'LastForumEvent': LastForumEvent
         })
     # video + forum events combined (e.g. n-grams)
     if len(ForumEvents)>0 and len(VideoEvents)>0:

@@ -6,6 +6,8 @@ testDb[is.na(testDb)]=0
 testDb = ddply(testDb, .(UserID), transform, AvgTimeBwSubs = mean(TimeSinceLast))
 testDb$NVideoAndForum= testDb$NVideoEvents+testDb$NForumEvents
 testDb = ddply(testDb, .(UserID), transform, ActivityRate = sum(NVideoAndForum!=0)/length(UserID))
+testDb$TimeSinceLastVideo = testDb$TimeStamp - testDb$LastVideoEvent
+testDb$TimeSinceLastForum = testDb$TimeStamp - testDb$LastForumEvent
 
 #---- use trained model to predict progress for test data
 preds= predict(model, newdata=testDb[,fs]);

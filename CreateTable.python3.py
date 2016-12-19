@@ -375,7 +375,7 @@ def ExportAsCSV(DataSet):
 
     # Save table into CSV file
 
-    with open("OutputTable.csv", "w") as f:
+    with open("OutputTable_test.csv", "w") as f:
 
         f.write(','.join(ColumnNames) + '\n')
 
@@ -404,7 +404,7 @@ def ExportAsCSV(DataSet):
 
 # Get input dataset filepath
 
-FilePath = 'data/dataset.pickle'
+FilePath = 'data/dataset_test.pickle'
 
 # Load dataset into python dictionary
 

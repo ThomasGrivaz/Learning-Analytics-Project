@@ -32,6 +32,8 @@ db = ddply(db, .(UserID), transform, ActivityRate = sum(NVideoAndForum!=0)/lengt
 
 #---- remove cases when there is no video or forum activity between two submissions
 
+db$TimeSinceLastVideo = db$TimeStamp - db$LastVideoEvent
+db$TimeSinceLastForum = db$TimeStamp - db$LastForumEvent
 db= filter(db,NVideoAndForum>0)  
 
 #----- make a catgorical vribale, indicating if grade improved
@@ -66,41 +68,49 @@ ctrl = trainControl(method='repeatedcv', number=5, repeats=3, summaryFunction=tw
 #============================================
 
 # set of features (with some custom features)
-fs=c('TimeSinceLast','SubmissionNumber', 'ProblemID', 'NumberOfSlowPlay', 'ActivityRate',
-     'NumberOfVideoInteractions', 'NumberVideoWatched', 'DurationOfVideoActivity',
-'TimeSpentOnForum', 'NumberOfPosts', 'NumberOfThreadViews', 'AverageVideoTimeDiffs')
+fs=c('TimeSinceLast','SubmissionNumber', 'ProblemID', 'NumberOfSlowPlay', 'RewatchingScore', 'DurationOfVideoActivity',
+     'NumberOfVideoInteractions', 'NumberVideoWatched', 'NVideoEvents', 'TimeSinceLastVideo','TimeSinceLastForum', 'AvgTimeBwSubs',
+'TimeSpentOnForum', 'NumberOfPosts', 'NumberOfThreadViews', 'AverageVideoTimeDiffs', 'NForumEvents', 'ActivityRate')
 
-db_temp = subset(db.train, select=-c(UserID, Grade, GradeDiff, improved))
-db_temp_test = subset(db.test, select=-c(UserID, Grade, GradeDiff, improved))
+db.train = subset(db.train, select=-c(UserID, Grade, GradeDiff, improved))
+db.test = subset(db.test, select=-c(UserID, Grade, GradeDiff, improved))
 
 # correlation matrix (to find redundant features)
 correlationMatrix = cor(db.train[,fs])
-highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75, verbose=TRUE)
+highlyCorrelated_cols = colnames(db.train[,fs][highlyCorrelated])
 
 training_data = db.train[,fs]
+test_data = db.test[,fs]
+training_data = training_data[,-highlyCorrelated]
+test_data = db.test[,-highlyCorrelated]
 
 # get rid of predictors which have almost zero variance
-nearzv = nearZeroVar(training_data, freqCut = 95/5)
+nearzv = nearZeroVar(db.train[,fs], freqCut = 95/5, uniqueCut=5)
+nearzv_cols = colnames(training_data[nearzv])
 training_data = training_data[,-nearzv]
+test_data = test_data[,-nearzv]
+
 
 # parameters grid
-rfGrid <- expand.grid(mtry = c(1:6)
+rfGrid <- expand.grid(mtry = c(1:5)
                       #maxDepth = c(1,2,5, 10, 20)
                       )
-random_forest=train(x=db.train[,fs],
+random_forest=train(x=training_data,
             y=db.train$improved,
             method = "rf",
             metric="ROC",
             trControl = ctrl,
             tuneGrid = rfGrid,
-            preProc = c("center", "scale")
+            #preProc = c("center", "scale")
+            preProc = c("scale")
             )
 print(random_forest);   plot(random_forest)
 
 importance = varImp(random_forest, scale=FALSE)
 plot(importance)
 
-preds_rf = predict(random_forest, newdata=db.test[,fs]);
+preds_rf = predict(random_forest, newdata=test_data);#db.test[,fs]);
 #preds_rf = predict(random_forest, newdata=db_temp_test)
 table(preds_rf)
 
@@ -111,21 +121,23 @@ plot(ROC_curve)
 #============================================
 #     Model 2: SVM
 #============================================
-svmGrid = expand.grid(sigma = c(1e-3, 1e-2, 1e-1, 0.05, 0.5, 1),
-                      C = c(0.001, 0.5,0.75, 0.9, 1, 1.1, 1.25))
+svmGrid = expand.grid(sigma = c(1e-1, 0.05, 0.5, 1, 2),
+                      C = c(0.0001, 0.001, 0.01, 0.1, 0.5, 1, 5, 7))
 #svmGrid = expand.grid(degree=c(1,2,3,4,5,7,10),
  #                     scale=1,
   #                    C=c(0.1, 0.75, 0.9, 1, 1.1, 1.25))
-svm=train(x=db.train[,fs],
+svm=train(x=training_data,
             y=db.train$improved,
             method = "svmRadial",
             metric="ROC",
             trControl = ctrl,
             tuneGrid = svmGrid,
-            preProc = c("center", "scale"))
+            tuneLength = 9,
+            preProc = c("center", "scale")
+            #preProc=c('pca')
+          )
 print(svm);   plot(svm)
-
-preds_svm = predict(svm, newdata=db.test[,fs]);
+preds_svm = predict(svm, newdata=test_data);
 table(preds_svm)
 
 confusionMatrix(preds_svm, db.test$improved)
@@ -137,18 +149,18 @@ plot(ROC_curve)
 #============================================
 nnGrid = expand.grid(size = c(1,2,3, 5, 10),
                      decay = c(0, 0.1, 0.5, 1))
-nn=train(x=db.train[,fs],
+nn=train(x=training_data,
           y=db.train$improved,
           method = "nnet",
           metric="ROC",
           trControl = ctrl,
           tuneGrid = nnGrid,
           #tuneLength= 9,
-          preProc = c("center", "scale")
+          preProc = c("scale")
          )
 print(nn);   plot(nn)
 test_data = db.test[,fs]#[,-nearzv]
-preds= predict(nn, newdata=db.test[,fs]);
+preds= predict(nn, newdata=test_data);
 table(preds)
 ROC_curve= roc(preds, db.test$improved);  auc(ROC_curve)
 plot(ROC_curve)
@@ -160,21 +172,18 @@ gbmGrid <-  expand.grid(interaction.depth = 1,
                         shrinkage = c(0.001, 0.01, 0.1, 0.5),
                         n.minobsinnode = c(5,10,15, 20)
                         )
-db.temp = subset(db.train, select = -c('improved') )
-gbm=train(#x=db.train[,fs],
-         #y=db.train$improved,
-        improved ~ . ,
-        data = db.train,
+gbm=train(x=training_data,
+          y= db.train$improved,
          method = "gbm",
          metric="ROC",
          trControl = ctrl,
          tuneGrid = gbmGrid,
-         #tuneLength= 9,
-         preProc = c("center", "scale", "pca")
+         tuneLength= 9,
+         preProc = c("scale")
          )
 print(gbm); plot(gbm)
 
-preds= predict(gbm, newdata=db.test[,fs]);
+preds= predict(gbm, newdata=test_data);
 table(preds)
 confusionMatrix(preds, db.test$improved)
 ROC_curve= roc(preds, db.test$improved);  auc(ROC_curve)
