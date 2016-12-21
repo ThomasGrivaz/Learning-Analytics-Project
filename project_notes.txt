@@ -63,3 +63,52 @@ I started trying a few models
 -Random Forest gives poor performance (ROC of 0.545) no matter which set of features you choose. Oddly enough the best performance is for only one predictor. I will further investigate
 
 -SVM yields poor results as well. I did not try different kernels for now
+
+--
+
+December 9
+
+model that can learn from chronological data
+(split by 
+
+how to model consistency?
+
+for regression?
+could measure forum/video activity of user compared to others (i.e. userX is in 95th percentile of forum users)
+
+December 13 notes
+trying different models has not improved anything
+
+simple features
+
+numSlowPlays - check distribution, seek type not valid/missing
+
+best submission - basic features timesincelast, numvideoevents, ...
+some had success with knn
+once you train the model
+
+
+
+December 17
+
+For the report
+
+Features:
+
+stats:
+forum usage
+distribution of # of submissions
+
+TODO ipynb w descriptive stats of features
+
+Time spent on forum  / Time between submissions
+2 hours on forum, 3 days between submission
+is worse than
+30 minutes on forum, 1 hour
+
+*** Another one ***
+DELTA time of submission - time of last forum event
+
+
+OBservations when splitting the data in two
+TimeSinceLast is lower for the "improved" submissions

@@ -263,7 +263,7 @@ def AppendFeatures(DataSet):
 
 # ------------------------------------------------------#
 
-def ExportAsCSV(DataSet):
+def ExportAsCSV(DataSet, CSV_filepath):
     # print(title)
 
     # print('\nOutput Table (with custom features):\n')
@@ -375,7 +375,7 @@ def ExportAsCSV(DataSet):
 
     # Save table into CSV file
 
-    with open("OutputTable_test.csv", "w") as f:
+    with open(CSV_filepath, "w") as f:
 
         f.write(','.join(ColumnNames) + '\n')
 
@@ -385,7 +385,7 @@ def ExportAsCSV(DataSet):
 
     # print(success message)
 
-    print(colored('Success! Table with %d rows saved to file: ./OutputTable.csv\n' % len(Table), 'green'))
+    print(colored('Success! Table with %d rows saved to file: %s\n' % (len(Table), CSV_filepath), 'green'))
 
 
 # END OF FUNCTION
@@ -404,7 +404,15 @@ def ExportAsCSV(DataSet):
 
 # Get input dataset filepath
 
-FilePath = 'data/dataset_test.pickle'
+FilePath = 'data/dataset.pickle'
+CSV_filepath = 'OutputTable.csv'
+
+# Run script with command line arg:
+# $ python CreateTable.python3.py test
+# to process the test dataset
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    FilePath = 'data/dataset_test.pickle'
+    CSV_filepath = 'OutputTable_test.csv'
 
 # Load dataset into python dictionary
 
@@ -427,4 +435,4 @@ os.system('read -s -n 1 -p "Data set will now be saved to CSV file. Press any ke
 
 # Save data set into CSV file
 
-ExportAsCSV(DataSet)
+ExportAsCSV(DataSet, CSV_filepath)
