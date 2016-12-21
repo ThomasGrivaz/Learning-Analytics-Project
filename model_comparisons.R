@@ -40,6 +40,7 @@ db= filter(db,NVideoAndForum>0)
 db$improved = factor(ifelse(db$GradeDiff>0 ,'Yes', 'No' ))
 table(db$improved)
 
+write.csv(db, file='data/data_preprocessed.csv', row.names=FALSE)
 # ----- (Optional) split your training data into train and test set. Use train set to build your classifier and try it on test data to check generalizability. 
 set.seed(1234)
 tr.index= sample(nrow(db), nrow(db)*0.9)
@@ -63,27 +64,50 @@ db.test = subset(db, !UserID %in% training_users)
 ctrl= trainControl(method = 'cv', number=5, summaryFunction=twoClassSummary ,classProbs = TRUE)
 ctrl = trainControl(method='repeatedcv', number=5, repeats=3, summaryFunction=twoClassSummary ,classProbs = TRUE)
 
+## Exploratory data analysis
+
+db_no_improvement = filter(db, improved == 'No')
+db_improvement = filter(db, improved == 'Yes')
+
+t.test(db_improvement$TimeSinceLast, db_no_improvement$TimeSinceLast)
+ks.test(db_improvement$ActivityRate, db_no_improvement$ActivityRate)
+
 #============================================
 #     Model 1: random forest classifier
 #============================================
 
 # set of features (with some custom features)
-fs=c('TimeSinceLast','SubmissionNumber', 'ProblemID', 'NumberOfSlowPlay', 'RewatchingScore', 'DurationOfVideoActivity',
-     'NumberOfVideoInteractions', 'NumberVideoWatched', 'NVideoEvents', 'TimeSinceLastVideo','TimeSinceLastForum', 'AvgTimeBwSubs',
-'TimeSpentOnForum', 'NumberOfPosts', 'NumberOfThreadViews', 'AverageVideoTimeDiffs', 'NForumEvents', 'ActivityRate')
+fs=c('TimeSinceLast', 
+     'SubmissionNumber',
+     'ProblemID',
+     'NumberOfSlowPlay',
+     'RewatchingScore',
+     'DurationOfVideoActivity',
+     'NumberOfVideoInteractions',
+     'NumberVideoWatched',
+     'NVideoEvents',
+     'TimeSinceLastVideo',
+     'TimeSinceLastForum',
+     'AvgTimeBwSubs',
+     'TimeSpentOnForum',
+     'NumberOfPosts',
+     'NumberOfThreadViews',
+     'AverageVideoTimeDiffs',
+     'NForumEvents',
+     'ActivityRate')
 
 db.train = subset(db.train, select=-c(UserID, Grade, GradeDiff, improved))
 db.test = subset(db.test, select=-c(UserID, Grade, GradeDiff, improved))
 
 # correlation matrix (to find redundant features)
 correlationMatrix = cor(db.train[,fs])
-highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75, verbose=TRUE)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.8, verbose=TRUE)
 highlyCorrelated_cols = colnames(db.train[,fs][highlyCorrelated])
 
 training_data = db.train[,fs]
 test_data = db.test[,fs]
 training_data = training_data[,-highlyCorrelated]
-test_data = db.test[,-highlyCorrelated]
+test_data = test_data[,-highlyCorrelated]
 
 # get rid of predictors which have almost zero variance
 nearzv = nearZeroVar(db.train[,fs], freqCut = 95/5, uniqueCut=5)
@@ -103,7 +127,7 @@ random_forest=train(x=training_data,
             trControl = ctrl,
             tuneGrid = rfGrid,
             #preProc = c("center", "scale")
-            preProc = c("scale")
+            preProc = c("range")
             )
 print(random_forest);   plot(random_forest)
 
@@ -121,8 +145,8 @@ plot(ROC_curve)
 #============================================
 #     Model 2: SVM
 #============================================
-svmGrid = expand.grid(sigma = c(1e-1, 0.05, 0.5, 1, 2),
-                      C = c(0.0001, 0.001, 0.01, 0.1, 0.5, 1, 5, 7))
+svmGrid = expand.grid(sigma = c(1e-1, 0.5, 1, 2, 10, 50),
+                      C = c(0.0001, 0.001, 0.01, 0.1, 0.5, 1, 5))
 #svmGrid = expand.grid(degree=c(1,2,3,4,5,7,10),
  #                     scale=1,
   #                    C=c(0.1, 0.75, 0.9, 1, 1.1, 1.25))
@@ -147,8 +171,8 @@ plot(ROC_curve)
 #============================================
 #     Model 3: neural network
 #============================================
-nnGrid = expand.grid(size = c(1,2,3, 5, 10),
-                     decay = c(0, 0.1, 0.5, 1))
+nnGrid = expand.grid(size = c(1,2,3, 5, 10, 50, 100),
+                     decay = c(0, 0.1, 0.5, 1, 2))
 nn=train(x=training_data,
           y=db.train$improved,
           method = "nnet",
@@ -156,10 +180,9 @@ nn=train(x=training_data,
           trControl = ctrl,
           tuneGrid = nnGrid,
           #tuneLength= 9,
-          preProc = c("scale")
+          preProc = c("range")#, "scale")
          )
 print(nn);   plot(nn)
-test_data = db.test[,fs]#[,-nearzv]
 preds= predict(nn, newdata=test_data);
 table(preds)
 ROC_curve= roc(preds, db.test$improved);  auc(ROC_curve)
@@ -188,3 +211,27 @@ table(preds)
 confusionMatrix(preds, db.test$improved)
 ROC_curve= roc(preds, db.test$improved);  auc(ROC_curve)
 plot(ROC_curve)
+
+knn = train(x=training_data,
+            y=db.train$improved,
+            metric="ROC",
+            method='knn',
+            tuneGrid = expand.grid(k=c(1,2,3,4,5,7)),
+            trControl=ctrl,
+            preProc = c("center", "scale")
+            )
+
+print(knn);   plot(knn)
+
+importance = varImp(knn, scale=FALSE)
+print(importance)
+
+preds_knn = predict(knn, newdata=test_data);#db.test[,fs]);
+#preds_rf = predict(random_forest, newdata=db_temp_test)
+table(preds_knn)
+
+confusionMatrix(preds_knn, db.test$improved)
+
+ROC_curve= roc(preds_knn, db.test$improved);  auc(ROC_curve)
+plot(ROC_curve)
+
