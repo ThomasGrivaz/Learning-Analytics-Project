@@ -10,8 +10,6 @@ library(caret)
 #------ read features extracted from train set, using your python script
 db=read.csv('OutputTable.csv', stringsAsFactors = F)
 
-# actual dataset with custom features
-#db=read.csv('features.csv', stringsAsFactors = F)
 
 #------ sort submissions
 db=db[order(db$UserID,db$ProblemID,db$SubmissionNumber),]
@@ -30,16 +28,18 @@ db = ddply(db, .(UserID), transform, AvgTimeBwSubs = mean(TimeSinceLast))
 db$NVideoAndForum= db$NVideoEvents+db$NForumEvents
 db = ddply(db, .(UserID), transform, ActivityRate = sum(NVideoAndForum!=0)/length(UserID))
 
-#---- remove cases when there is no video or forum activity between two submissions
+#---- remove cases when there is no video or forum activity between two submissions 
+# + add time difference between submission and last Forum/Video event
 
 db$TimeSinceLastVideo = db$TimeStamp - db$LastVideoEvent
 db$TimeSinceLastForum = db$TimeStamp - db$LastForumEvent
 db= filter(db,NVideoAndForum>0)  
 
-#----- make a catgorical vribale, indicating if grade improved
+#----- make a categorical vribale, indicating if grade improved
 db$improved = factor(ifelse(db$GradeDiff>0 ,'Yes', 'No' ))
 table(db$improved)
 
+# write "preprocessed" data as csv for python LSTM model
 write.csv(db, file='data/data_preprocessed.csv', row.names=FALSE)
 # ----- (Optional) split your training data into train and test set. Use train set to build your classifier and try it on test data to check generalizability. 
 set.seed(1234)
@@ -60,17 +60,22 @@ user_tr_index = sample(length(users), length(users)*0.9)
 training_users = users[user_tr_index]
 db.train = subset(db, UserID %in% training_users)
 db.test = subset(db, !UserID %in% training_users)
+
 # cross validation
 ctrl= trainControl(method = 'cv', number=5, summaryFunction=twoClassSummary ,classProbs = TRUE)
 ctrl = trainControl(method='repeatedcv', number=5, repeats=3, summaryFunction=twoClassSummary ,classProbs = TRUE)
 
-## Exploratory data analysis
+## Compare distribution of features
 
 db_no_improvement = filter(db, improved == 'No')
 db_improvement = filter(db, improved == 'Yes')
 
+summary(db_no_improvement)
+summary(db_improvement)
+
+#some ks and t-tests, not all tests are written here
 t.test(db_improvement$TimeSinceLast, db_no_improvement$TimeSinceLast)
-ks.test(db_improvement$ActivityRate, db_no_improvement$ActivityRate)
+ks.test(db_improvement$TimeSpentOnForum, db_no_improvement$TimeSpentOnForum)
 
 #============================================
 #     Model 1: random forest classifier
@@ -79,33 +84,34 @@ ks.test(db_improvement$ActivityRate, db_no_improvement$ActivityRate)
 # set of features (with some custom features)
 fs=c('TimeSinceLast', 
      'SubmissionNumber',
-     'ProblemID',
-     'NumberOfSlowPlay',
-     'RewatchingScore',
-     'DurationOfVideoActivity',
-     'NumberOfVideoInteractions',
-     'NumberVideoWatched',
-     'NVideoEvents',
+     #'ProblemID',
+     #'NumberOfSlowPlay',
+     #'RewatchingScore',
+     #'DurationOfVideoActivity',
+     #'NumberOfVideoInteractions',
+     #'NumberVideoWatched',
+     #'NVideoEvents',
      'TimeSinceLastVideo',
      'TimeSinceLastForum',
-     'AvgTimeBwSubs',
+     #'AvgTimeBwSubs',
      'TimeSpentOnForum',
-     'NumberOfPosts',
+     #'NumberOfPosts',
      'NumberOfThreadViews',
-     'AverageVideoTimeDiffs',
-     'NForumEvents',
-     'ActivityRate')
+     #'AverageVideoTimeDiffs',
+     'NForumEvents'
+     #'ActivityRate'
+     )
 
-db.train = subset(db.train, select=-c(UserID, Grade, GradeDiff, improved))
-db.test = subset(db.test, select=-c(UserID, Grade, GradeDiff, improved))
 
 # correlation matrix (to find redundant features)
 correlationMatrix = cor(db.train[,fs])
-highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.8, verbose=TRUE)
+highlyCorrelated = findCorrelation(correlationMatrix, cutoff=0.8, verbose=TRUE)
 highlyCorrelated_cols = colnames(db.train[,fs][highlyCorrelated])
 
 training_data = db.train[,fs]
 test_data = db.test[,fs]
+
+# (optional) remove highly correlated features
 training_data = training_data[,-highlyCorrelated]
 test_data = test_data[,-highlyCorrelated]
 
@@ -114,6 +120,7 @@ nearzv = nearZeroVar(db.train[,fs], freqCut = 95/5, uniqueCut=5)
 nearzv_cols = colnames(training_data[nearzv])
 training_data = training_data[,-nearzv]
 test_data = test_data[,-nearzv]
+
 
 
 # parameters grid
@@ -126,22 +133,21 @@ random_forest=train(x=training_data,
             metric="ROC",
             trControl = ctrl,
             tuneGrid = rfGrid,
-            #preProc = c("center", "scale")
-            preProc = c("range")
+            preProc = c("center", "scale")
             )
 print(random_forest);   plot(random_forest)
 
 importance = varImp(random_forest, scale=FALSE)
 plot(importance)
 
-preds_rf = predict(random_forest, newdata=test_data);#db.test[,fs]);
-#preds_rf = predict(random_forest, newdata=db_temp_test)
+preds_rf = predict(random_forest, newdata=test_data);
 table(preds_rf)
 
 confusionMatrix(preds_rf, db.test$improved)
 
 ROC_curve= roc(preds_rf, db.test$improved);  auc(ROC_curve)
 plot(ROC_curve)
+
 #============================================
 #     Model 2: SVM
 #============================================
@@ -168,6 +174,7 @@ confusionMatrix(preds_svm, db.test$improved)
 
 ROC_curve= roc(preds_svm, db.test$improved);  auc(ROC_curve)
 plot(ROC_curve)
+
 #============================================
 #     Model 3: neural network
 #============================================
@@ -187,6 +194,7 @@ preds= predict(nn, newdata=test_data);
 table(preds)
 ROC_curve= roc(preds, db.test$improved);  auc(ROC_curve)
 plot(ROC_curve)
+
 #============================================
 #     Model 4: gradient boosting classifier
 #============================================
@@ -212,6 +220,9 @@ confusionMatrix(preds, db.test$improved)
 ROC_curve= roc(preds, db.test$improved);  auc(ROC_curve)
 plot(ROC_curve)
 
+#============================================
+#     Model 5: k-nearest neighbors
+#============================================
 knn = train(x=training_data,
             y=db.train$improved,
             metric="ROC",
@@ -226,8 +237,7 @@ print(knn);   plot(knn)
 importance = varImp(knn, scale=FALSE)
 print(importance)
 
-preds_knn = predict(knn, newdata=test_data);#db.test[,fs]);
-#preds_rf = predict(random_forest, newdata=db_temp_test)
+preds_knn = predict(knn, newdata=test_data);
 table(preds_knn)
 
 confusionMatrix(preds_knn, db.test$improved)
