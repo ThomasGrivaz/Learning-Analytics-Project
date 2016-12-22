@@ -1,3 +1,4 @@
+# set this to your best current model
 model = random_forest
 
 testDb=read.csv('OutputTable_test.csv', stringsAsFactors = F)
@@ -9,6 +10,8 @@ testDb = ddply(testDb, .(UserID), transform, ActivityRate = sum(NVideoAndForum!=
 testDb$TimeSinceLastVideo = testDb$TimeStamp - testDb$LastVideoEvent
 testDb$TimeSinceLastForum = testDb$TimeStamp - testDb$LastForumEvent
 
+#testDb = testDb[,-highlyCorrelated]
+#testDb = testDb[, -nearzv]
 #---- use trained model to predict progress for test data
 preds= predict(model, newdata=testDb[,fs]);
 
